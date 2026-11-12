@@ -1,2 +1,2 @@
-export type WigleObservation={bssid:string;ssid:string|null;authMode:string|null;observedAt:string|null;channel:number|null;frequencyMhz:number|null;rssi:number|null;latitude:number|null;longitude:number|null;altitudeM:number|null;accuracyM:number|null;networkType:string;sourceRowHash:string};
+export type WigleObservation={bssid:string;ssid:string|null;authMode:string|null;observedAt:string|null;channel:number|null;frequencyMhz:number|null;rssi:number|null;latitude:number|null;longitude:number|null;altitudeM:number|null;altitude_m?:number|null;accuracyM:number|null;networkType:string;sourceRowHash:string};
 export type ImportSummary={rowsSeen:number;rowsImported:number;rowsInvalid:number;rowsDuplicate:number;errors:string[]};
