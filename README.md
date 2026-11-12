@@ -2,6 +2,19 @@
 
 Offline-first lead-interest capture firmware for the M5Stack Cardputer ADV. It creates a local Wi-Fi access point and captive portal; it does not connect to nearby networks, claim internet access, collect Wi-Fi credentials, or expose an administrative portal to hotspot visitors.
 
+## V1.1 neighborhood intelligence
+
+The `feature/wigle-neighborhood-intelligence` branch adds a localhost-only authenticated React/Vite dashboard and Node/SQLite backend. It imports WiGLE Android CSV exports, keeps wireless observations separate from opt-in leads, aggregates observations into coarse map cells, and provides import history, map, analytics, and manual lead management. See [`docs/ANDROID_WIGLE.md`](docs/ANDROID_WIGLE.md) and [`docs/SYNC_SCHEMA_V1.md`](docs/SYNC_SCHEMA_V1.md).
+
+```sh
+npm install
+cp .env.example .env
+# Set ADMIN_PASSWORD_BCRYPT, SESSION_SECRET, and a local database path.
+npm run dev
+```
+
+The backend listens only on `127.0.0.1:8787`. Production mode requires an explicit bcrypt admin hash and session secret. Never commit `.env`, exports, BSSIDs, or customer data.
+
 ## Hardware
 
 M5Stack Cardputer-Adv (K132-Adv): ESP32-S3FN8/Stamp-S3A, 8 MB flash, ST7789V2 240×135 display, TCA8418 keyboard on I²C (SDA 8, SCL 9, INT 11), and microSD (CS 12, MOSI 14, SCK 40, MISO 39). Manufacturer reference: https://docs.m5stack.com/en/core/Cardputer-Adv

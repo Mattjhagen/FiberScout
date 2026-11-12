@@ -1,0 +1,6 @@
+WigleWifi-1.6,appRelease=test
+MAC,SSID,AuthMode,FirstSeen,Channel,Frequency,RSSI,CurrentLatitude,CurrentLongitude,AltitudeMeters,AccuracyMeters,RCOIs,MfgrId,Type
+aa:bb:cc:dd:ee:01,"Synthetic Home, quoted",[WPA2],2026-01-02 03:04:05,6,2437,-55,41.100,-81.200,200,8,,1,WIFI
+aa:bb:cc:dd:ee:02,Synthetic Cafe,[WPA2],2026-01-02 03:05:05,11,2462,-70,,,,,,,WIFI
+aa:bb:cc:dd:ee:01,"Synthetic Home, quoted",[WPA2],2026-01-02 03:06:05,6,2437,-56,41.100,-81.200,200,8,,1,WIFI
+not-a-bssid,Bad,,,,,,,,,,,,WIFI
