@@ -7,13 +7,15 @@ Offline-first lead-interest capture firmware for the M5Stack Cardputer ADV. It c
 The `feature/wigle-neighborhood-intelligence` branch adds a localhost-only authenticated React/Vite dashboard and Node/SQLite backend. It imports WiGLE Android CSV exports, keeps wireless observations separate from opt-in leads, aggregates observations into coarse map cells, and provides import history, map, analytics, and manual lead management. See [`docs/ANDROID_WIGLE.md`](docs/ANDROID_WIGLE.md) and [`docs/SYNC_SCHEMA_V1.md`](docs/SYNC_SCHEMA_V1.md).
 
 ```sh
-npm install
+npm ci
 cp .env.example .env
 # Set ADMIN_PASSWORD_BCRYPT, SESSION_SECRET, and a local database path.
 npm run dev
 ```
 
 The backend listens only on `127.0.0.1:8787`. Production mode requires an explicit bcrypt admin hash and session secret. Never commit `.env`, exports, BSSIDs, or customer data.
+
+Security and private Android access details are in [`docs/SECURITY_HARDENING.md`](docs/SECURITY_HARDENING.md). Run `npm run db:check` to verify SQLite integrity. The Vite development server proxies `/api` to the localhost backend; production serves the built dashboard from the backend.
 
 ## Hardware
 

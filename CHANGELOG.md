@@ -10,3 +10,9 @@
 - Added authenticated localhost Node/SQLite neighborhood intelligence dashboard.
 - Added resilient WiGLE 1.6/legacy CSV and gzip import with duplicate/error accounting.
 - Added coarse aggregate map, import history, analytics, and consent-aware lead management.
+
+## 0.2.1 - 2026-11-12
+
+- Removed the vulnerable optional sqlite3 session-store dependency chain and pinned dependencies.
+- Added SQLite-backed sessions, login rate limiting, strict CSP, proxy-aware secure cookies, and Zod request validation.
+- Added permanent transactional lead erasure, staged transactional WiGLE imports, startup retention cleanup, integrity checks, and private Android deployment guidance.
