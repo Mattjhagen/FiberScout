@@ -1,0 +1,8 @@
+{
+  "name": "fiberscout-neighborhood-intelligence",
+  "private": true,
+  "type": "module",
+  "scripts": {"dev":"concurrently -k \"npm:dev:server\" \"npm:dev:web\"","dev:server":"tsx server/index.ts","dev:web":"vite --host 127.0.0.1","build":"tsc -p tsconfig.json && vite build","test":"vitest run","test:watch":"vitest","start":"node dist-server/index.js"},
+  "dependencies": {"@vitejs/plugin-react":"latest","bcryptjs":"latest","better-sqlite3":"latest","connect-sqlite3":"latest","csv-parse":"latest","dotenv":"latest","express":"latest","express-session":"latest","helmet":"latest","leaflet":"latest","multer":"latest","react":"latest","react-dom":"latest","react-leaflet":"latest","zod":"latest"},
+  "devDependencies": {"@types/better-sqlite3":"latest","@types/express":"latest","@types/express-session":"latest","@types/leaflet":"latest","@types/multer":"latest","@types/node":"latest","@types/react":"latest","@types/react-dom":"latest","concurrently":"latest","tsx":"latest","typescript":"latest","vite":"latest","vitest":"latest"}
+}

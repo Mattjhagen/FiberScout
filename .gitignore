@@ -3,3 +3,9 @@
 .venv/
 __pycache__/
 *.pyc
+.env
+data/
+dist-web/
+dist-server/
+uploads/
+node_modules/
