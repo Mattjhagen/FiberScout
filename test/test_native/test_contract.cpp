@@ -3,8 +3,8 @@
 #include "portal_assets.h"
 
 void test_bundle_has_required_resources() {
-  const char *required[] = {"/", "/style.css", "/avatar.JPG", "/favicon.png", "/manifest.json", "/Matthew_Hagen_TMobile_Fiber.vcf", "/icons.css", "/fa-solid-900.woff2"};
-  TEST_ASSERT_EQUAL_UINT(8, sizeof(portalAssets) / sizeof(portalAssets[0]));
+  const char *required[] = {"/", "/safari.html", "/style.css", "/avatar.JPG", "/favicon.png", "/manifest.json", "/Matthew_Hagen_TMobile_Fiber.vcf", "/icons.css", "/fa-solid-900.woff2"};
+  TEST_ASSERT_EQUAL_UINT(9, sizeof(portalAssets) / sizeof(portalAssets[0]));
   for (const char *path : required) {
     bool found = false;
     for (const auto &asset : portalAssets) {

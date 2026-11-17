@@ -9,9 +9,14 @@ def assets():
     source = ROOT / 'tmobile-pass'
     html = (source / 'index.html').read_text()
     html = html.replace('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', '/icons.css')
-    help_text = '''<details class="contact-footer"><summary>Using this offline page</summary><p>No internet is provided. Call, text, email and contacts open your phone's apps; nothing is sent automatically. Email needs internet to send.</p><p>If an action does not open in this Wi-Fi window, open Safari or Chrome and type <strong>http://192.168.4.1/</strong> while still connected. You may need to leave this Wi-Fi to send a message using mobile data.</p><a href="http://192.168.4.1/" target="_blank" rel="noopener" class="btn btn-call">Open in browser</a></details>'''
-    html = html.replace('    </div>\n</body>', help_text + '\n    </div>\n</body>')
+    help_text = (ROOT / 'portal-vendor/browser-help.html').read_text()
+    # Keep the pinned site's actions intact; guidance works without JavaScript.
+    html = html.replace('    <div class="container">', '    <div class="container">\n' + help_text, 1)
     result = {'/': ('text/html; charset=utf-8', html.encode())}
+    # A dedicated Safari action page avoids changing Android's original SMS URLs.
+    safari = html.replace('sms:4023587059?body=', 'sms:4023587059&amp;body=')
+    safari = safari.replace(' download="Matthew_Hagen_TMobile_Fiber.vcf"', '')
+    result['/safari.html'] = ('text/html; charset=utf-8', safari.encode())
     for name, mime in [('style.css','text/css'), ('avatar.JPG','image/jpeg'), ('favicon.png','image/png'), ('manifest.json','application/manifest+json'), ('Matthew_Hagen_TMobile_Fiber.vcf','text/vcard; charset=utf-8')]:
         result['/' + name] = (mime, (source / name).read_bytes())
     # Retain original icon definitions and only the solid face used by this site.
