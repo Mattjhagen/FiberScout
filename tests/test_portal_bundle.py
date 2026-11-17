@@ -30,30 +30,22 @@ class OfflineBundle(unittest.TestCase):
             if path.endswith('.css'):
                 for resource in re.findall(r'url\([\"\']?([^\)\"\']+)', data.decode()):
                     self.assertIn(urljoin(path,resource), self.assets)
-    def test_source_actions_and_assets_unchanged(self):
+    def test_simple_page_and_assets(self):
         source = root / 'tmobile-pass'
-        original = Links((source/'index.html').read_text())
-        offline = Links(self.assets['/'][1].decode())
-        self.assertEqual(original.actions, [x for x in offline.actions if x != '/safari.html'])
-        self.assertEqual(sum('sign%20up%20for%20Fiber' in x for x in offline.actions),4)
-        for name in ('style.css','avatar.JPG','favicon.png','manifest.json','Matthew_Hagen_TMobile_Fiber.vcf'):
-            self.assertEqual(self.assets['/'+name][1],(source/name).read_bytes())
-    def test_safari_actions_and_static_handoff(self):
         home = self.assets['/'][1].decode()
-        safari = self.assets['/safari.html'][1].decode()
-        original_sms = [x for x in Links(home).actions if x.startswith('sms:')]
-        safari_sms = [x for x in Links(safari).actions if x.startswith('sms:')]
-        self.assertEqual(len(original_sms), 5)
-        self.assertEqual(safari_sms, [x.replace('?body=', '&body=') for x in original_sms])
-        self.assertIn('value="http://192.168.4.1/safari.html"', home)
-        self.assertIn('Use Without Internet', home)
-        self.assertIn('Cancel may disconnect', home)
-        self.assertNotIn(' download=', safari)
-        self.assertIn('Matthew_Hagen_TMobile_Fiber.vcf', Links(safari).actions)
+        self.assertEqual(self.assets['/safari.html'], self.assets['/'])
+        self.assertIn('Call or text: (402) 358-7059', home)
+        self.assertIn('Matt.hagen1@t-mobile.com', home)
+        self.assertLess(home.index('Call or text:'), home.index('pricing-section'))
+        for plan in ('Fiber 300', 'Fiber 1 Gig', 'Fiber 2 Gig', 'Fiber 5 Gig'):
+            self.assertIn(plan, home)
+        self.assertNotIn('sms:', home)
+        self.assertNotIn('Select Plan', home)
+        self.assertNotIn('Open in Safari', home)
         self.assertNotIn('<script', home)
-        for action in Links(safari).actions:
-            if not urlparse(action).scheme:
-                self.assertIn(urljoin('/', action), self.assets)
+        self.assertIn('tel:4023587059', Links(home).actions)
+        for name in ('style.css','avatar.JPG','favicon.png','manifest.json','Matthew_Hagen_TMobile_Fiber.vcf'):
+            self.assertEqual(self.assets['/'+name][1], (source/name).read_bytes())
 
     def test_deterministic_generation(self):
         bundle.build(); before=(root/'include/portal_assets.h').read_bytes()

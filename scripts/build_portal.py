@@ -9,14 +9,19 @@ def assets():
     source = ROOT / 'tmobile-pass'
     html = (source / 'index.html').read_text()
     html = html.replace('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', '/icons.css')
-    help_text = (ROOT / 'portal-vendor/browser-help.html').read_text()
-    # Keep the pinned site's actions intact; guidance works without JavaScript.
-    html = html.replace('    <div class="container">', '    <div class="container">\n' + help_text, 1)
+    # Show useful information immediately, even in restricted Wi-Fi viewers.
+    html = re.sub(r'            <!-- Quick Contact Actions -->.*?</header>',
+        """            <div class="contact-details">
+                <a href="tel:4023587059">Call or text: (402) 358-7059</a>
+                <a href="mailto:Matt.hagen1@t-mobile.com" style="overflow-wrap:anywhere">Matt.hagen1@t-mobile.com</a>
+            </div>
+        </header>""", html, count=1, flags=re.S)
+    html = re.sub(r'                    <a href="sms:[^\n]+</a>', '', html)
+    note = """<p style="text-align:center;color:#a1a1aa;font-size:13px;line-height:1.5">Save my number and reach out anytime. This Wi-Fi page works offline. If a contact link does not open, call, text or email me directly from your phone. Email needs internet.</p>"""
+    html = html.replace('        <!-- Direct Contact Footer Box -->', note + '\n        <!-- Direct Contact Footer Box -->')
     result = {'/': ('text/html; charset=utf-8', html.encode())}
-    # A dedicated Safari action page avoids changing Android's original SMS URLs.
-    safari = html.replace('sms:4023587059?body=', 'sms:4023587059&amp;body=')
-    safari = safari.replace(' download="Matthew_Hagen_TMobile_Fiber.vcf"', '')
-    result['/safari.html'] = ('text/html; charset=utf-8', safari.encode())
+    # Preserve previously shared local addresses; both now show the simple page.
+    result['/safari.html'] = ('text/html; charset=utf-8', html.encode())
     for name, mime in [('style.css','text/css'), ('avatar.JPG','image/jpeg'), ('favicon.png','image/png'), ('manifest.json','application/manifest+json'), ('Matthew_Hagen_TMobile_Fiber.vcf','text/vcard; charset=utf-8')]:
         result['/' + name] = (mime, (source / name).read_bytes())
     # Retain original icon definitions and only the solid face used by this site.
