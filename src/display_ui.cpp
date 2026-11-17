@@ -79,8 +79,15 @@ void renderPortrait() {
 
 void uiBegin() {
   auto &d = M5Cardputer.Display;
-  // 135 x 240 portrait for the ADV held with the keyboard beside the screen.
-  d.setRotation(0);
+  // The Cardputer ADV panel is 135x240; library releases differ in
+  // absolute rotation conventions. Preserve the previously upright
+  // orientation (1) when it is portrait, and fall back to another portrait
+  // orientation if the installed M5GFX version reports landscape.
+  d.setRotation(1);
+  if (d.width() > d.height()) {
+    d.setRotation(0);
+    if (d.width() > d.height()) d.setRotation(3);
+  }
   d.setTextFont(1);
   d.setTextWrap(false);
   d.setTextSize(1);
