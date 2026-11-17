@@ -1,0 +1,3 @@
+[submodule "tmobile-pass"]
+	path = tmobile-pass
+	url = https://github.com/Mattjhagen/tmobile-pass

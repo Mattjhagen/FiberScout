@@ -9,3 +9,4 @@ dist-web/
 dist-server/
 uploads/
 node_modules/
+include/portal_assets.h
