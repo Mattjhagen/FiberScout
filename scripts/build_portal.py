@@ -9,9 +9,19 @@ def assets():
     source = ROOT / 'tmobile-pass'
     html = (source / 'index.html').read_text()
     html = html.replace('https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css', '/icons.css')
-    help_text = '''<details class="contact-footer"><summary>Using this offline page</summary><p>No internet is provided. Call, text, email and contacts open your phone's apps; nothing is sent automatically. Email needs internet to send.</p><p>If an action does not open in this Wi-Fi window, open Safari or Chrome and type <strong>http://192.168.4.1/</strong> while still connected. You may need to leave this Wi-Fi to send a message using mobile data.</p><a href="http://192.168.4.1/" target="_blank" rel="noopener" class="btn btn-call">Open in browser</a></details>'''
-    html = html.replace('    </div>\n</body>', help_text + '\n    </div>\n</body>')
+    # Show useful information immediately, even in restricted Wi-Fi viewers.
+    html = re.sub(r'            <!-- Quick Contact Actions -->.*?</header>',
+        """            <div class="contact-details">
+                <a href="tel:4023587059">Call or text: (402) 358-7059</a>
+                <a href="mailto:Matt.hagen1@t-mobile.com" style="overflow-wrap:anywhere">Matt.hagen1@t-mobile.com</a>
+            </div>
+        </header>""", html, count=1, flags=re.S)
+    html = re.sub(r'                    <a href="sms:[^\n]+</a>', '', html)
+    note = """<p style="text-align:center;color:#a1a1aa;font-size:13px;line-height:1.5">Save my number and reach out anytime. This Wi-Fi page works offline. If a contact link does not open, call, text or email me directly from your phone. Email needs internet.</p>"""
+    html = html.replace('        <!-- Direct Contact Footer Box -->', note + '\n        <!-- Direct Contact Footer Box -->')
     result = {'/': ('text/html; charset=utf-8', html.encode())}
+    # Preserve previously shared local addresses; both now show the simple page.
+    result['/safari.html'] = ('text/html; charset=utf-8', html.encode())
     for name, mime in [('style.css','text/css'), ('avatar.JPG','image/jpeg'), ('favicon.png','image/png'), ('manifest.json','application/manifest+json'), ('Matthew_Hagen_TMobile_Fiber.vcf','text/vcard; charset=utf-8')]:
         result['/' + name] = (mime, (source / name).read_bytes())
     # Retain original icon definitions and only the solid face used by this site.
