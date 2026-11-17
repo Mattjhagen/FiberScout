@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include "session.h"
 #include "config.h"
+#include "web_portal.h"
 
 extern FiberConfig config;
 static uint32_t last = 0;
@@ -25,11 +26,16 @@ void uiLoop() {
   d.fillScreen(BLACK);
   d.setCursor(3, 3);
   d.setTextColor(0xF81F);
-  d.println("FIBERSCOUT V2.1");
+  d.println("FIBERSCOUT CAR");
   d.setTextColor(WHITE);
-  d.printf("WiFi: ACTIVE\nSSID: %.22s\nClients: %d\nPortal: 192.168.4.1\nPlans: 4 (offline)\nContact: SMS / call / email\nUplink: NONE\nStatus: %s\n\n[SPACE] session %s",
-      config.ssid.c_str(),
+  d.printf("WiFi: ACTIVE | %d clients\\nSSID: %.22s\\nPortal: 192.168.4.1\\nTX: %d dBm | AP resets: %lu\\nUptime: %luh %lum\\nHeap: %lu KB\\nUplink: OFFLINE\\nStatus: %s\\n[SPACE] session %s",
       WiFi.softAPgetStationNum(),
+      config.ssid.c_str(),
+      static_cast<int>(portalTxPowerDbm()),
+      static_cast<unsigned long>(portalWifiRestarts()),
+      static_cast<unsigned long>(portalUptimeSeconds() / 3600),
+      static_cast<unsigned long>((portalUptimeSeconds() / 60) % 60),
+      static_cast<unsigned long>(ESP.getFreeHeap() / 1024),
       sessionState().active ? "SESSION" : "READY",
       sessionState().active ? "STOP" : "START");
 }
