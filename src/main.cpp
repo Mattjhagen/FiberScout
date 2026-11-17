@@ -14,10 +14,11 @@ void setup() {
   delay(250);
   loadConfig(config);
   M5Cardputer.begin();
+  Serial.printf("Board: %s\n", M5.getBoard() == m5::board_t::board_M5CardputerADV ? "Cardputer ADV" : "unrecognized (check hardware)");
   uiBegin();
   sessionInit(config.neighborhood);
   portalBegin();
-  Serial.println("FiberScout V2 offline portal started at http://192.168.4.1/");
+  Serial.println("FiberScout V2.1 offline portal started at http://192.168.4.1/");
 }
 void loop() {
   portalLoop();

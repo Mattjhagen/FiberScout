@@ -25,7 +25,7 @@ void uiLoop() {
   d.fillScreen(BLACK);
   d.setCursor(3, 3);
   d.setTextColor(0xF81F);
-  d.println("FIBERSCOUT V2");
+  d.println("FIBERSCOUT V2.1");
   d.setTextColor(WHITE);
   d.printf("WiFi: ACTIVE\nSSID: %.22s\nClients: %d\nPortal: 192.168.4.1\nPlans: 4 (offline)\nContact: SMS / call / email\nUplink: NONE\nStatus: %s\n\n[SPACE] session %s",
       config.ssid.c_str(),
