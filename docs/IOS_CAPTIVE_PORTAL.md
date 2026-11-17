@@ -51,7 +51,8 @@ bundling. Firmware compilation cannot prove iOS app handoff or contact import.
 ## Build validation — November 17, 2026
 
 - Nine Python tests passed; native route/gzip contract test passed.
-- `pio run -e cardputer-adv` succeeded: RAM 50,156 bytes (15.3%);
-  application 1,555,497 bytes (53.9% of app slot).
+- `pio run -e cardputer-adv` succeeded: RAM 50,196 bytes (15.3%);
+  application 1,574,941 bytes (54.6% of app slot), after integrating car mode.
 - No device was flashed. iOS/Android acceptance checks above remain pending.
-- Based on master; the independent car Wi-Fi/display PR #6 is unchanged.
+- Includes the car Wi-Fi/display changes from PR #6, including the latest
+  portrait orientation and footer fixes, alongside the Safari portal fix.
