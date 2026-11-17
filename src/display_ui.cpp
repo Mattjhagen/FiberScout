@@ -73,7 +73,7 @@ void renderPortrait() {
   // Footer doubles as a reminder that customers get an offline web page.
   d.fillRect(0, h - 29, w, 29, MAGENTA);
   textAt(7, h - 24, sessionState().active ? "SESSION ACTIVE" : "READY  /  OFFLINE", LIGHT);
-  textAt(7, h - 12, "[SPACE] toggle session", LIGHT);
+  textAt(7, h - 12, "[SPACE] toggle", LIGHT);
 }
 } // namespace
 
