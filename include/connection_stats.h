@@ -16,4 +16,5 @@ void connectionStatsBegin();
 void connectionStatsLoop();
 void connectionStatsRecordJoinFromWifiEvent();
 bool connectionStatsSetClock(uint32_t unixSeconds);
+void connectionStatsNtpSynced(uint32_t unixSeconds);
 ConnectionTotals connectionStatsGet();

@@ -5,6 +5,7 @@
 #include "config.h"
 #include "web_portal.h"
 #include "connection_stats.h"
+#include "wifi_uplink.h"
 
 extern FiberConfig config;
 
@@ -18,7 +19,11 @@ constexpr uint16_t LIGHT = 0xFFFF;
 constexpr uint16_t MUTED = 0xB5B6;
 constexpr uint16_t GREEN = 0x5EE9;
 uint32_t lastPaint = 0;
-uint8_t activeScreen = 0; // 0 = status, 1 = connection statistics
+uint8_t activeScreen = 0; // 0=status, 1=stats, 2=uplink setup
+uint8_t wifiEditing = 0; // 0=idle, 1=SSID, 2=password
+String editedSsid;
+String editedPassword;
+bool lastSaveFailed = false;
 
 void textAt(int x, int y, const String &s, uint16_t color = LIGHT, int scale = 1) {
   auto &d = M5Cardputer.Display;
@@ -75,7 +80,7 @@ void renderPortrait() {
   // Footer doubles as a reminder that customers get an offline web page.
   d.fillRect(0, h - 29, w, 29, MAGENTA);
   textAt(7, h - 24, sessionState().active ? "SESSION ACTIVE" : "READY  /  OFFLINE", LIGHT);
-  textAt(7, h - 12, "FN+> STATS  SPACE", LIGHT);
+  textAt(7, h - 12, "FN+> STATS  FN+v", LIGHT);
 }
 void renderStats() {
   auto &d = M5Cardputer.Display;
@@ -107,10 +112,40 @@ void renderStats() {
     }
   }
   d.fillRect(0, h - 29, w, 29, MAGENTA);
-  textAt(7, h - 24, totals.clockValid ? "CLOCK: PHONE TIME" : "CLOCK: WAITING", LIGHT);
+  textAt(7, h - 24, uplinkNtpSynced() ? "CLOCK: NTP SYNCED" : (totals.clockValid ? "CLOCK: PHONE TIME" : "CLOCK: WAITING"), LIGHT);
   textAt(7, h - 12, "FN+< STATUS", LIGHT);
 }
 
+void renderUplink() {
+  auto &d = M5Cardputer.Display;
+  const int w = d.width(), h = d.height();
+  d.fillScreen(BLACK_BG);
+  d.fillRect(0, 0, w, 37, MAGENTA);
+  textAt(7, 5, "FIBERSCOUT", LIGHT, 2);
+  textAt(9, 26, "TIME / HOTSPOT", LIGHT);
+  d.fillRoundRect(7, 43, w - 14, 32, 5, PANEL);
+  textAt(13, 49, uplinkConnected() ? "SIYATA: CONNECTED" : (uplinkConfigured() ? "SIYATA: CONNECTING" : "UPLINK: NOT SET"), uplinkConnected() ? GREEN : PINK);
+  textAt(13, 62, uplinkNtpSynced() ? "TIME: NTP SYNCED" : "TIME: WAITING", MUTED);
+
+  d.fillRoundRect(7, 82, w - 14, 52, 5, PANEL);
+  textAt(13, 88, wifiEditing == 1 ? "EDIT WIFI NAME:" : "WIFI NAME", PINK);
+  textAt(13, 105, shortSsid(wifiEditing ? editedSsid : uplinkSsid(), 18), LIGHT);
+
+  d.fillRoundRect(7, 140, w - 14, 45, 5, PANEL);
+  textAt(13, 146, wifiEditing == 2 ? "ENTER PASSWORD:" : "PASSWORD", PINK);
+  String mask;
+  if (wifiEditing == 2) {
+    const size_t chars = editedPassword.length() > 17 ? 17 : editedPassword.length();
+    for (size_t i = 0; i < chars; ++i) mask += '*';
+  }
+  textAt(13, 162, wifiEditing == 2 ? mask : "Saved on device", MUTED);
+  if (lastSaveFailed) textAt(13, 190, "CHECK SSID / PASS", PINK);
+  else textAt(13, 190, "CUSTOMER AP: ON", GREEN);
+
+  d.fillRect(0, h - 29, w, 29, MAGENTA);
+  textAt(7, h - 24, wifiEditing ? "TYPE VIA KEYBOARD" : "ENTER: SET HOTSPOT", LIGHT);
+  textAt(7, h - 12, wifiEditing ? "ENTER:NEXT  DEL:EDIT" : "FN+< STATUS", LIGHT);
+}
 } // namespace
 
 void uiBegin() {
@@ -129,7 +164,8 @@ void uiBegin() {
   d.setTextSize(1);
   d.fillScreen(BLACK_BG);
   if (activeScreen == 0) renderPortrait();
-  else renderStats();
+  else if (activeScreen == 1) renderStats();
+  else renderUplink();
 }
 
 void uiLoop() {
@@ -140,14 +176,39 @@ void uiLoop() {
     // On the ADV, Fn + comma / period / slash / semicolon correspond
     // to the printed left / down / right / up arrow legends.
     // Detect the underlying physical keys while Fn is held.
-    if (keys.fn && (M5Cardputer.Keyboard.isKeyPressed(',') ||
-                    M5Cardputer.Keyboard.isKeyPressed(';'))) {
-      activeScreen = 0;
-      lastPaint = 0;
-    } else if (keys.fn && (M5Cardputer.Keyboard.isKeyPressed('/') ||
-                           M5Cardputer.Keyboard.isKeyPressed('.'))) {
-      activeScreen = 1;
-      lastPaint = 0;
+    if (keys.fn && M5Cardputer.Keyboard.isKeyPressed(';')) {
+      activeScreen = 0; wifiEditing = 0; lastPaint = 0;
+    } else if (keys.fn && M5Cardputer.Keyboard.isKeyPressed(',')) {
+      activeScreen = 0; wifiEditing = 0; lastPaint = 0;
+    } else if (keys.fn && M5Cardputer.Keyboard.isKeyPressed('/')) {
+      activeScreen = 1; wifiEditing = 0; lastPaint = 0;
+    } else if (keys.fn && M5Cardputer.Keyboard.isKeyPressed('.')) {
+      activeScreen = 2; wifiEditing = 0; lastPaint = 0;
+    } else if (activeScreen == 2) {
+      if (keys.enter) {
+        if (wifiEditing == 0) {
+          editedSsid = uplinkSsid(); editedPassword = "";
+          wifiEditing = 1; lastSaveFailed = false;
+        } else if (wifiEditing == 1) {
+          wifiEditing = 2;
+        } else {
+          lastSaveFailed = !uplinkSaveCredentials(editedSsid, editedPassword);
+          if (!lastSaveFailed) wifiEditing = 0;
+          editedPassword = "";
+        }
+        lastPaint = 0;
+      } else if (wifiEditing && keys.del) {
+        String &field = wifiEditing == 1 ? editedSsid : editedPassword;
+        if (!field.isEmpty()) field.remove(field.length() - 1);
+        lastPaint = 0;
+      } else if (wifiEditing && !keys.fn && !keys.ctrl && !keys.alt) {
+        String &field = wifiEditing == 1 ? editedSsid : editedPassword;
+        const size_t maxLen = wifiEditing == 1 ? 32 : 63;
+        for (char c : keys.word) {
+          if (c >= 32 && c <= 126 && field.length() < maxLen) field += c;
+        }
+        lastPaint = 0;
+      }
     } else if (keys.space) {
       sessionToggle();
       lastPaint = 0;

@@ -142,6 +142,13 @@ bool connectionStatsSetClock(uint32_t epoch) {
   preClockThisBoot = 0;
   return true;
 }
+void connectionStatsNtpSynced(uint32_t epoch) {
+  if (epoch < 1700000000U || epoch > 2082758400U) return;
+  // SNTP already set system time; mark the date as trusted, even if the
+  // captive browser previously supplied an approximate timestamp.
+  if (!trustedClock) connectionStatsSetClock(epoch);
+  trustedClock = true;
+}
 ConnectionTotals connectionStatsGet() {
   ConnectionTotals out{};
   out.lifetime = data.lifetime;
