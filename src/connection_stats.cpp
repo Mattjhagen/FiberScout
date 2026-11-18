@@ -21,6 +21,8 @@ volatile uint32_t pendingJoins = 0;
 uint32_t lastSaveMs = 0;
 bool dirty = false;
 bool trustedClock = false;
+uint32_t preClockThisBoot = 0;
+uint32_t firstPreClockMs = 0;
 
 uint32_t epochNow() {
   time_t t = time(nullptr);
@@ -49,6 +51,8 @@ void addJoins(uint32_t n) {
   uint32_t epoch = epochNow();
   if (!epoch) {
     data.beforeClock = UINT32_MAX - data.beforeClock < n ? UINT32_MAX : data.beforeClock + n;
+    if (preClockThisBoot == 0) firstPreClockMs = millis();
+    preClockThisBoot = UINT32_MAX - preClockThisBoot < n ? UINT32_MAX : preClockThisBoot + n;
   } else {
     addBucket(data.hours, 24, epoch / 3600, n);
     addBucket(data.days, 31, dayKey(epoch), n);
@@ -126,9 +130,16 @@ bool connectionStatsSetClock(uint32_t epoch) {
   tv.tv_sec = epoch;
   if (settimeofday(&tv, nullptr) != 0) return false;
   trustedClock = true;
-  // Associations that happened immediately before the browser opened are
-  // counted in the current hour/day, but long-ago undated joins are not.
-  // We intentionally keep their separate 'beforeClock' total.
+  // Count only associations from the first five minutes before a portal
+  // browser clock arrives. Older undated associations stay unassigned.
+  if (preClockThisBoot > 0 && millis() - firstPreClockMs <= 5UL * 60000UL) {
+    addBucket(data.hours, 24, epoch / 3600, preClockThisBoot);
+    addBucket(data.days, 31, dayKey(epoch), preClockThisBoot);
+    data.beforeClock = data.beforeClock >= preClockThisBoot ?
+                       data.beforeClock - preClockThisBoot : 0;
+    dirty = true;
+  }
+  preClockThisBoot = 0;
   return true;
 }
 ConnectionTotals connectionStatsGet() {
