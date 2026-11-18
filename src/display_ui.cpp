@@ -149,5 +149,6 @@ void uiLoop() {
   const uint32_t now = millis();
   if (lastPaint != 0 && now - lastPaint < 2000) return;
   lastPaint = now;
-  renderPortrait();
+  if (activeScreen == 0) renderPortrait();
+  else renderStats();
 }
