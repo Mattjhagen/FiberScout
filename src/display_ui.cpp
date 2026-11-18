@@ -80,7 +80,7 @@ void renderPortrait() {
   // Footer doubles as a reminder that customers get an offline web page.
   d.fillRect(0, h - 29, w, 29, MAGENTA);
   textAt(7, h - 24, sessionState().active ? "SESSION ACTIVE" : "READY  /  OFFLINE", LIGHT);
-  textAt(7, h - 12, "FN+> STATS  FN+v", LIGHT);
+  textAt(7, h - 12, "W: WIFI  FN+> STATS", LIGHT);
 }
 void renderStats() {
   auto &d = M5Cardputer.Display;
@@ -184,6 +184,10 @@ void uiLoop() {
       activeScreen = 1; wifiEditing = 0; lastPaint = 0;
     } else if (keys.fn && M5Cardputer.Keyboard.isKeyPressed('.')) {
       activeScreen = 2; wifiEditing = 0; lastPaint = 0;
+    } else if (activeScreen != 2 && !keys.fn &&
+               M5Cardputer.Keyboard.isKeyPressed('w')) {
+      // Backup shortcut for ADV keyboard builds where Fn+Down is unreliable.
+      activeScreen = 2; wifiEditing = 0; lastPaint = 0;
     } else if (activeScreen == 2) {
       if (keys.enter) {
         if (wifiEditing == 0) {
@@ -220,5 +224,6 @@ void uiLoop() {
   if (lastPaint != 0 && now - lastPaint < 2000) return;
   lastPaint = now;
   if (activeScreen == 0) renderPortrait();
-  else renderStats();
+  else if (activeScreen == 1) renderStats();
+  else renderUplink();
 }
