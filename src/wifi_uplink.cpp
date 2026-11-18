@@ -69,7 +69,7 @@ bool uplinkNtpSynced() { return ntpConfirmed; }
 String uplinkSsid() { return ssid; }
 String uplinkIp() { return uplinkConnected() ? WiFi.localIP().toString() : String("--"); }
 bool uplinkSaveCredentials(const String &newSsid, const String &newPass) {
-  if (newSsid.length() < 1 || newSsid.length() > 32 || newPass.length() > 63) return false;
+  if (newSsid.length() < 1 || newSsid.length() > 32 || newPass.length() < 8 || newPass.length() > 63) return false;
   Preferences p;
   if (!p.begin("fsc-uplink", false)) return false;
   bool ok = p.putString("ssid", newSsid) && p.putString("pass", newPass);
