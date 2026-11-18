@@ -136,8 +136,17 @@ void uiLoop() {
   M5Cardputer.update();
   if (M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isPressed()) {
     auto keys = M5Cardputer.Keyboard.keysState();
-    if (keys.left || keys.right || keys.up || keys.down) {
-      activeScreen = (keys.left || keys.up) ? 0 : 1;
+    // M5Cardputer 1.1.1 has no keys.left/right/up/down fields.
+    // On the ADV, Fn + comma / period / slash / semicolon correspond
+    // to the printed left / down / right / up arrow legends.
+    // Detect the underlying physical keys while Fn is held.
+    if (keys.fn && (M5Cardputer.Keyboard.isKeyPressed(',') ||
+                    M5Cardputer.Keyboard.isKeyPressed(';'))) {
+      activeScreen = 0;
+      lastPaint = 0;
+    } else if (keys.fn && (M5Cardputer.Keyboard.isKeyPressed('/') ||
+                           M5Cardputer.Keyboard.isKeyPressed('.'))) {
+      activeScreen = 1;
       lastPaint = 0;
     } else if (keys.space) {
       sessionToggle();
