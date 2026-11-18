@@ -4,6 +4,7 @@
 #include "session.h"
 #include "config.h"
 #include "web_portal.h"
+#include "connection_stats.h"
 
 extern FiberConfig config;
 
@@ -17,6 +18,7 @@ constexpr uint16_t LIGHT = 0xFFFF;
 constexpr uint16_t MUTED = 0xB5B6;
 constexpr uint16_t GREEN = 0x5EE9;
 uint32_t lastPaint = 0;
+uint8_t activeScreen = 0; // 0 = status, 1 = connection statistics
 
 void textAt(int x, int y, const String &s, uint16_t color = LIGHT, int scale = 1) {
   auto &d = M5Cardputer.Display;
@@ -73,8 +75,42 @@ void renderPortrait() {
   // Footer doubles as a reminder that customers get an offline web page.
   d.fillRect(0, h - 29, w, 29, MAGENTA);
   textAt(7, h - 24, sessionState().active ? "SESSION ACTIVE" : "READY  /  OFFLINE", LIGHT);
-  textAt(7, h - 12, "[SPACE] toggle", LIGHT);
+  textAt(7, h - 12, "FN+> STATS  SPACE", LIGHT);
 }
+void renderStats() {
+  auto &d = M5Cardputer.Display;
+  const int w = d.width();
+  const int h = d.height();
+  const ConnectionTotals totals = connectionStatsGet();
+  d.fillScreen(BLACK_BG);
+
+  d.fillRect(0, 0, w, 37, MAGENTA);
+  textAt(7, 5, "FIBERSCOUT", LIGHT, 2);
+  textAt(9, 26, "CONNECTION STATS", LIGHT);
+
+  d.fillRoundRect(7, 43, w - 14, 23, 5, PANEL);
+  textAt(14, 49, "WIFI JOINS / NOT PEOPLE", PINK);
+
+  const char *labels[5] = { "TODAY", "LAST 24 HOURS", "LAST 7 DAYS",
+                            "LAST 30 DAYS", "LIFETIME" };
+  uint32_t counts[5] = { totals.today, totals.last24Hours,
+                         totals.last7Days, totals.last30Days, totals.lifetime };
+  for (int i = 0; i < 5; ++i) {
+    int y = 70 + i * 28;
+    d.fillRoundRect(7, y, w - 14, 24, 5, PANEL);
+    textAt(14, y + 3, labels[i], PINK);
+    if (!totals.clockValid && i < 4) {
+      textAt(14, y + 14, "CLOCK NOT SET", MUTED);
+    } else {
+      String value = String(counts[i]);
+      textAt(w - 13 - static_cast<int>(value.length()) * 6, y + 13, value, LIGHT);
+    }
+  }
+  d.fillRect(0, h - 29, w, 29, MAGENTA);
+  textAt(7, h - 24, totals.clockValid ? "CLOCK: PHONE TIME" : "CLOCK: WAITING", LIGHT);
+  textAt(7, h - 12, "FN+< STATUS", LIGHT);
+}
+
 } // namespace
 
 void uiBegin() {
@@ -92,19 +128,20 @@ void uiBegin() {
   d.setTextWrap(false);
   d.setTextSize(1);
   d.fillScreen(BLACK_BG);
-  renderPortrait();
+  if (activeScreen == 0) renderPortrait();
+  else renderStats();
 }
 
 void uiLoop() {
   M5Cardputer.update();
   if (M5Cardputer.Keyboard.isChange() && M5Cardputer.Keyboard.isPressed()) {
     auto keys = M5Cardputer.Keyboard.keysState();
-    for (char c : keys.word) {
-      if (c == ' ') {
-        sessionToggle();
-        lastPaint = 0;
-        break;
-      }
+    if (keys.left || keys.right || keys.up || keys.down) {
+      activeScreen = (keys.left || keys.up) ? 0 : 1;
+      lastPaint = 0;
+    } else if (keys.space) {
+      sessionToggle();
+      lastPaint = 0;
     }
   }
 
@@ -112,5 +149,6 @@ void uiLoop() {
   const uint32_t now = millis();
   if (lastPaint != 0 && now - lastPaint < 2000) return;
   lastPaint = now;
-  renderPortrait();
+  if (activeScreen == 0) renderPortrait();
+  else renderStats();
 }

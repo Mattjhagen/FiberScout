@@ -19,6 +19,14 @@ def assets():
     html = re.sub(r'                    <a href="sms:[^\n]+</a>', '', html)
     note = """<p style="text-align:center;color:#a1a1aa;font-size:13px;line-height:1.5">Save my number and reach out anytime. This Wi-Fi page works offline. If a contact link does not open, call, text or email me directly from your phone. Email needs internet.</p>"""
     html = html.replace('        <!-- Direct Contact Footer Box -->', note + '\n        <!-- Direct Contact Footer Box -->')
+    # Synchronize calendar estimates from the first visiting phone after each boot.
+    # This sends ONLY device time, never an identifier, and changes no visible UI.
+    html = html.replace('</body>', """<script>
+try {
+  if (Date.now() > 1700000000000)
+    fetch('/__clock?t=' + Math.floor(Date.now()/1000), {cache:'no-store'}).catch(function(){});
+} catch (_) {}
+</script></body>""")
     result = {'/': ('text/html; charset=utf-8', html.encode())}
     # Preserve previously shared local addresses; both now show the simple page.
     result['/safari.html'] = ('text/html; charset=utf-8', html.encode())
