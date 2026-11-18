@@ -133,13 +133,18 @@ void renderUplink() {
 
   d.fillRoundRect(7, 140, w - 14, 45, 5, PANEL);
   textAt(13, 146, wifiEditing == 2 ? "ENTER PASSWORD:" : "PASSWORD", PINK);
-  textAt(13, 162, wifiEditing == 2 ? String(editedPassword.length(), '*') : "Stored securely", MUTED);
+  String mask;
+  if (wifiEditing == 2) {
+    const size_t chars = editedPassword.length() > 17 ? 17 : editedPassword.length();
+    for (size_t i = 0; i < chars; ++i) mask += '*';
+  }
+  textAt(13, 162, wifiEditing == 2 ? mask : "Saved on device", MUTED);
   if (lastSaveFailed) textAt(13, 190, "CHECK SSID / PASS", PINK);
   else textAt(13, 190, "CUSTOMER AP: ON", GREEN);
 
   d.fillRect(0, h - 29, w, 29, MAGENTA);
   textAt(7, h - 24, wifiEditing ? "TYPE VIA KEYBOARD" : "ENTER: SET HOTSPOT", LIGHT);
-  textAt(7, h - 12, wifiEditing ? "ENTER: NEXT / SAVE" : "FN+< STATUS", LIGHT);
+  textAt(7, h - 12, wifiEditing ? "ENTER:NEXT  DEL:EDIT" : "FN+< STATUS", LIGHT);
 }
 } // namespace
 
