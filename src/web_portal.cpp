@@ -5,6 +5,7 @@
 #include "config.h"
 #include "portal_assets.h"
 #include <esp_wifi.h>
+#include "connection_stats.h"
 
 extern FiberConfig config;
 static WebServer server(80);
@@ -60,6 +61,10 @@ static void captiveRedirect() {
   server.send(302, "text/plain", "");
 }
 void portalBegin() {
+  // Association events, not page impressions or person/device identities.
+  WiFi.onEvent([](WiFiEvent_t, WiFiEventInfo_t) {
+    connectionStatsRecordJoinFromWifiEvent();
+  }, ARDUINO_EVENT_WIFI_AP_STACONNECTED);
   WiFi.mode(WIFI_AP);
   WiFi.softAPConfig(IPAddress(192,168,4,1), IPAddress(192,168,4,1), IPAddress(255,255,255,0));
   if (!WiFi.softAP(config.ssid.c_str())) {
@@ -72,6 +77,24 @@ void portalBegin() {
     server.on(asset.path, HTTP_GET, [entry]() { serveAsset(*entry); });
   }
   server.on("/index.html", HTTP_GET, []() { serveAsset(portalAssets[0]); });
+  // Local browser clock bootstrap; this is NOT authentication or an audit clock.
+  // No identifiers are recorded. Only first valid timestamp per boot is used.
+  server.on("/__clock", HTTP_GET, []() {
+    const String raw = server.arg("t");
+    if (raw.length() < 10 || raw.length() > 10) {
+      server.send(400, "text/plain", "Invalid time");
+      return;
+    }
+    for (char c : raw) {
+      if (c < '0' || c > '9') {
+        server.send(400, "text/plain", "Invalid time");
+        return;
+      }
+    }
+    connectionStatsSetClock(static_cast<uint32_t>(strtoul(raw.c_str(), nullptr, 10)));
+    server.sendHeader("Cache-Control", "no-store");
+    server.send(204, "text/plain", "");
+  });
   // Unknown hosts and OS connectivity probes must lead to the local page.
   server.onNotFound(captiveRedirect);
   server.begin();
